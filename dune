@@ -1,14 +1,12 @@
-(executable (name day1) (modules day1) (libraries batteries))
-(executable (name day2) (modules day2) (libraries batteries))
-(executable (name day3) (modules day3) (libraries aoc batteries))
-(executable (name day4) (modules day4) (libraries aoc batteries))
-(executable (name day5) (modules day5) (libraries aoc batteries))
-(executable (name day6) (modules day6) (libraries aoc batteries))
-(executable (name day7) (modules day7) (libraries aoc batteries))
-(executable (name day8) (modules day8) (libraries aoc batteries))
-
-(executable (name day10) (modules day10) (libraries aoc batteries))
-
+(executable (name day1)  (modules day1)  (libraries batteries))
+(executable (name day2)  (modules day2)  (libraries batteries))
+(executable (name day3)  (modules day3)  (libraries batteries))
+(executable (name day4)  (modules day4)  (libraries batteries))
+(executable (name day5)  (modules day5)  (libraries batteries))
+(executable (name day6)  (modules day6)  (libraries batteries))
+(executable (name day7)  (modules day7)  (libraries batteries))
+(executable (name day8)  (modules day8)  (libraries batteries))
+(executable (name day10) (modules day10) (libraries batteries))
 
 (env
  (dev

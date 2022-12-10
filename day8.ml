@@ -5,10 +5,16 @@ open! Batteries
   PART 2 =  8 = 209880
 *)
 
+let arg_or default =
+  match Sys.argv with
+  | [| _; "-emacs" |] -> default
+  | [| _; filename |] -> filename
+  | _ -> default
+
 type forest = { width : int; height : int; mat : int array array }
 
 let parsed_forest =
-  let lines = File.lines_of (Aoc.arg_or "day8.txt") |> List.of_enum in
+  let lines = File.lines_of (arg_or "day8.txt") |> List.of_enum in
   let width = lines |> List.first |> String.length in
   let height = List.length lines in
   let mat = Array.make_matrix width height (-1) in
@@ -95,4 +101,5 @@ let gold forest =
   done;
   !max_scenic_score
 
-let _ = Aoc.print_results (silver parsed_forest) (gold parsed_forest)
+let main = Printf.printf "silver:\t%10d\ngold:\t%10d\n"
+             (silver parsed_forest) (gold parsed_forest)

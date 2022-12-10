@@ -1,6 +1,12 @@
 open! Batteries
 
-let input_file = Aoc.arg_or "day5.txt"
+let arg_or default =
+  match Sys.argv with
+  | [| _; "-emacs" |] -> default
+  | [| _; filename |] -> filename
+  | _ -> default
+
+let input_file = arg_or "day5.txt"
 
 type movement = { qty : int; src : int; dst : int }
 

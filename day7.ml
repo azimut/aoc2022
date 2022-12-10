@@ -5,12 +5,18 @@ open! Batteries
     PART 2 = 12545514
 *)
 
+let arg_or default =
+  match Sys.argv with
+  | [| _; "-emacs" |] -> default
+  | [| _; filename |] -> filename
+  | _ -> default
+
 type dirtree = File of string * int | Dir of string * dirtree list * int
 
 (* NOTE: day7.txt has repeated directory names *)
 (* NOTE: this works because I know logs cd's to something meaninful before ls *)
 let parsed =
-  File.with_file_in (Aoc.arg_or "day8.txt") IO.read_all
+  File.with_file_in (arg_or "day8.txt") IO.read_all
   |> String.trim
   |> String.split_on_char '\n'
   |> List.filter (( <> ) "$ ls")
@@ -132,4 +138,4 @@ let gold () =
   in
   Closer.get answer
 
-let _ = Aoc.print_results (silver ()) (gold ())
+let _ = Printf.printf "silver:\t%10d\ngold:\t%10d\n" (silver ()) (gold ())

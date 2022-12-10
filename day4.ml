@@ -1,6 +1,12 @@
 open Batteries
 
-let input_file = Aoc.arg_or "day4.txt"
+let arg_or default =
+  match Sys.argv with
+  | [| _; "-emacs" |] -> default
+  | [| _; filename |] -> filename
+  | _ -> default
+
+let input_file = arg_or "day4.txt"
 
 let range_to_section lst =
   let section = BitSet.create 100 in
@@ -38,4 +44,4 @@ let gold =
   |> Enum.filter not
   |> Enum.count
 
-let main = Aoc.print_results silver gold
+let _ = Printf.printf "silver:\t%10d\ngold:\t%10d\n" silver gold

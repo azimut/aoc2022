@@ -1,6 +1,12 @@
 open! Batteries
 
-let packet = File.with_file_in (Aoc.arg_or "day6.txt") IO.read_all
+let arg_or default =
+  match Sys.argv with
+  | [| _; "-emacs" |] -> default
+  | [| _; filename |] -> filename
+  | _ -> default
+
+let packet = File.with_file_in (arg_or "day6.txt") IO.read_all
 
 let has_no_repeats s n =
   n = (String.explode s |> List.sort_unique Char.compare |> List.length)

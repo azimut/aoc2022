@@ -1,6 +1,12 @@
 open Batteries
 
-let input_file = Aoc.arg_or "day3.txt"
+let arg_or default =
+  match Sys.argv with
+  | [| _; "-emacs" |] -> default
+  | [| _; filename |] -> filename
+  | _ -> default
+
+let input_file = arg_or "day3.txt"
 
 let priority item =
   match Char.is_uppercase item with
@@ -44,5 +50,4 @@ let gold =
   |> List.map priority
   |> List.reduce ( + )
 
-(* let main = Printf.printf "gold:\t%10d\n" silver *)
 let main = Printf.printf "silver:\t%10d\ngold:\t%10d\n" silver gold
