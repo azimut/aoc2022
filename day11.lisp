@@ -2,12 +2,11 @@
  '(#:defpackage-plus
    #:alexandria
    #:serapeum
-   #:cl-ppcre
-   #:arrows))
+   #:cl-ppcre))
 
 (defpackage+-1:defpackage+ #:aoc2022-day11
   (:use #:cl)
-  (:import-from #:serapeum #:->)
+  (:import-from #:serapeum #:-> #:~>>)
   (:local-nicknames (#:a #:alexandria)
                     (#:s #:serapeum)
                     (#:re #:cl-ppcre)))
@@ -15,27 +14,8 @@
 (in-package #:aoc2022-day11)
 
 #|
-monkeys operate based on how WORRIED you are about each item
-
-ITEMS are listed by the WORRY LEVEL
-OP shows how much the WORRY changes as the monkey inspect the item.
-TEST shows how the WORRY is used to decide who to throw the item
-
-AFTER a monkey inpects an item, but BEFORE the test. The WORRY is """divided by 3""" and round down to closes integer
-
-monkeys take TURNS, where it thrws all his items in one turn, in order one at the time
-
-in monkey ORDER
-
-until a ROUND of monkeys is done
-
-received at end of the monkey list
-
-OUTPUT = "monkey business"
-= multiplying the number of items inspected by the busiest monkeys
-
-= 10605
-
+PART 1 = 55458
+PART 2= 14508081294
 |#
 
 (defstruct monkey
@@ -48,7 +28,7 @@ OUTPUT = "monkey business"
   (counter 0))
 
 (defun monkeys (filename &aux monkeys)
-  (flet ((f1 (s) (s:~>> s (re:split ",") (mapcar #'parse-integer)))
+  (flet ((f1 (s) (~>> s (re:split ",") (mapcar #'parse-integer)))
          (f2 (op a b) (eval
                        (read-from-string
                         (format nil "(lambda (old) (~a ~a ~a))" op a b)))))
@@ -78,21 +58,23 @@ OUTPUT = "monkey business"
       (monkey-iftrue monkey)
       (monkey-iffalse monkey)))
 
-(-> update-worry (Integer Monkey) Integer)
-(defun update-worry (item monkey)
-  (floor (/ (funcall (monkey-operation monkey) item) 3)))
+(-> update-worry (Integer Monkey Integer) Integer)
+(defun update-worry (item monkey relief)
+  (if (/= 3 relief)
+      (funcall (monkey-operation monkey) item)
+      (floor (/ (funcall (monkey-operation monkey) item) relief))))
 
-(defun silver (filename &key (rounds 20) &aux (monkeys (monkeys filename)))
+(defun resolve (filename &key (rounds 20) (relief 3)
+                &aux (monkeys (monkeys filename)) (lcm (apply #'lcm (mapcar #'monkey-divisor monkeys))))
   (dotimes (i rounds)
-    (format t "Round: ~d~%" (1+ i))
     (dolist (monkey monkeys)
       (loop :for item := (pop (monkey-items monkey))
             :while item
-            :for new-item := (update-worry item monkey)
+            :for new-item := (mod (update-worry item monkey relief) lcm)
             :for new-monkey := (new-monkey new-item monkey)
             :do (s:push-end new-item (monkey-items (nth new-monkey monkeys)))
                 (incf (monkey-counter monkey)))))
-  (arrows:-<>> (mapcar #'monkey-counter monkeys)
-               (sort <> #'>)
-               (s:take 2)
-               (reduce #'*)))
+  (~>> (mapcar #'monkey-counter monkeys)
+       (sort _ #'>)
+       (s:take 2)
+       (reduce #'*)))
