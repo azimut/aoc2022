@@ -12,14 +12,7 @@ PART 1 = 55458
 PART 2= 14508081294
 |#
 
-(defstruct monkey
-  (id 0)
-  (items ())
-  (operation #'identity)
-  (divisor 1)
-  (iftrue 0)
-  (iffalse 0)
-  (counter 0))
+(defstruct monkey id items operation divisor iftrue iffalse counter)
 
 (defun monkeys (filename &aux monkeys)
   (flet ((f1 (s) (~>> s (re:split ",") (mapcar #'parse-integer)))
