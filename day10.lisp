@@ -2,7 +2,7 @@
 
 (defpackage+-1:defpackage+ #:aoc2022-day10
   (:use #:cl)
-  (:import-from #:serapeum #:->)
+  (:import-from #:serapeum #:-> #:~>>)
   (:import-from #:cl-slice #:slice)
   (:local-nicknames (#:a #:alexandria) (#:s #:serapeum) (#:re #:cl-ppcre)))
 
@@ -26,12 +26,12 @@
 
 (-> silver (List) Fixnum)
 (defun silver (cpu-states &aux (rcs (reverse cpu-states)) (signal-cycles '(20 60 100 140 180 220)))
-  (s:~>> (loop :for signal-cycle :in signal-cycles
-               :collect (find signal-cycle rcs :key #'cpu-cycle :test #'>=))
-         (remove-if #'null)
-         (mapcar #'cpu-x)
-         (mapcar #'* signal-cycles)
-         (reduce #'+)))
+  (~>> (loop :for signal-cycle :in signal-cycles
+             :collect (find signal-cycle rcs :key #'cpu-cycle :test #'>=))
+       (remove-if #'null)
+       (mapcar #'cpu-x)
+       (mapcar #'* signal-cycles)
+       (reduce #'+)))
 
 (defun gold (cpu-states &aux (screen (make-array '(6 40) :initial-element #\?)))
   (loop :for cycle :from 1 :to (* 6 40)

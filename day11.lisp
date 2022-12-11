@@ -1,15 +1,9 @@
-(ql:quickload
- '(#:defpackage-plus
-   #:alexandria
-   #:serapeum
-   #:cl-ppcre))
+(ql:quickload '(#:defpackage-plus #:alexandria #:serapeum #:cl-ppcre))
 
 (defpackage+-1:defpackage+ #:aoc2022-day11
   (:use #:cl)
   (:import-from #:serapeum #:-> #:~>>)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:s #:serapeum)
-                    (#:re #:cl-ppcre)))
+  (:local-nicknames (#:a #:alexandria) (#:s #:serapeum) (#:re #:cl-ppcre)))
 
 (in-package #:aoc2022-day11)
 
@@ -33,22 +27,16 @@ PART 2= 14508081294
                        (read-from-string
                         (format nil "(lambda (old) (~a ~a ~a))" op a b)))))
     (re:do-register-groups
-        ((#'parse-integer id)
-         (#'f1 items)
-         a op b
-         (#'parse-integer divisor iftrue iffalse))
-        ((s:string-join
-          '("Monkey (\\d+):\\s+"
-            "Starting items: (\\d+(?:,\\s*\\d+)*)\\s+"
-            "Operation: new = (.*) ([\\+\\*]) (.*)\\n\\s+"
-            "Test: divisible by (\\d+)\\s+"
-            "If true: throw to monkey (\\d+)\\s+"
-            "If false: throw to monkey (\\d+)") "")
-         (a:read-file-into-string filename)
-         monkeys)
+        ((#'parse-integer id) (#'f1 items) a op b (#'parse-integer divisor iftrue iffalse))
+        ((s:string-join '("Monkey (\\d+):\\s+"
+                          "Starting items: (\\d+(?:,\\s*\\d+)*)\\s+"
+                          "Operation: new = (.*) ([\\+\\*]) (.*)\\n\\s+"
+                          "Test: divisible by (\\d+)\\s+"
+                          "If true: throw to monkey (\\d+)\\s+"
+                          "If false: throw to monkey (\\d+)") "")
+         (a:read-file-into-string filename) monkeys)
       (s:push-end (make-monkey :id id :items items
-                               :operation (f2 op a b)
-                               :divisor divisor
+                               :operation (f2 op a b) :divisor divisor
                                :iftrue iftrue :iffalse iffalse)
                   monkeys))))
 
@@ -78,3 +66,6 @@ PART 2= 14508081294
        (sort _ #'>)
        (s:take 2)
        (reduce #'*)))
+
+(defun silver (filename) (resolve filename :rounds 20 :relief 3))
+(defun gold (filename) (resolve filename :rounds 10000 :relief 1))
