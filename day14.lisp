@@ -35,17 +35,17 @@
          (mapcar (lambda (coord) (mapcar #'f coord) )))))
 
 (defun horizontal-draw (src dst cave &aux (x (x src)))
-  (loop :for y :from (y src) :to (y dst)
-        :do (setf (aref (cave-mat cave)
-                        y
-                        (- x (cave-offset cave)))
+  (loop :for y 
+          :from (min (y dst) (y src))
+            :to (max (y src) (y dst))
+        :do (setf (aref (cave-mat cave) y (1+ (- x (cave-offset cave))))
                   #\#)))
 
 (defun vertical-draw (src dst cave &aux (y (y src)))
-  (loop :for x :from (x dst) :to (x src)
-        :do (setf (aref (cave-mat cave) 
-                        y
-                        (- x (cave-offset cave)))
+  (loop :for x
+          :from (1+ (min (x dst) (x src)))
+            :to (1+ (max (x dst) (x src)))
+        :do (setf (aref (cave-mat cave) y (- x (cave-offset cave)))
                   #\#)))
 
 (defun draw-rock-path (src dst cave)
@@ -66,7 +66,7 @@
 (defun make-cave (filename &aux (paths (paths filename)))
   (let* ((xs     (~> paths (a:flatten) (mapcar #'x _)))
          (ys     (~> paths (a:flatten) (mapcar #'y _)))
-         (width  (+ 1 (- (a:extremum xs #'>) (a:extremum xs #'<))))
+         (width  (+ 3 (- (a:extremum xs #'>) (a:extremum xs #'<))))
          (height (+ 2 (a:extremum ys #'>))))
     (~>> (%make-cave 
           :floor (a:extremum ys #'>)
@@ -95,7 +95,7 @@
 
 (-> can-fall-p (cave coord) (or (member :void :rest) coord))
 (defun can-fall-p (cave current-pos)
-  (cond ((> (y current-pos) (cave-floor cave)) 
+  (cond ((>= (y current-pos) (cave-floor cave)) 
          :void)
         ((char= #\. (lookup cave (down current-pos)))
          (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)
@@ -106,7 +106,7 @@
          (setf (aref (cave-mat cave) (y (down-left current-pos)) (- (x (down-left current-pos)) (cave-offset cave))) #\o)
          (down-left current-pos))
         ((char= #\. (lookup cave (down-right current-pos)))
-         (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)
+         (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)         
          (setf (aref (cave-mat cave) (y (down-right current-pos)) (- (x (down-right current-pos)) (cave-offset cave))) #\o)
          (down-right current-pos))
         (t :rest)))
@@ -119,6 +119,6 @@
     (:void NIL)))
 
 (-> simulation-loop (cave) integer)
-(defun simulation-loop (cave)
-  (loop :while (drop-sand cave #(500 0))
+(defun simulation-loop (cave &aux (sand-source #(501 0)))
+  (loop :while (drop-sand cave sand-source)
         :counting T))
