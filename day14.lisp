@@ -12,6 +12,9 @@
 (deftype coord () '(simple-vector 2))
 (defstruct (cave (:constructor %make-cave)) mat offset (floor 0))
 
+(s:defplace lookup (cave pos)
+  (aref (cave-mat cave) (y pos) (- (x pos) (cave-offset cave))))
+
 (-> x (coord) integer)
 (-> y (coord) integer)
 (defun x (c) (aref c 0))
@@ -34,15 +37,13 @@
   (loop :for y
           :from (min (y dst) (y src))
             :to (max (y src) (y dst))
-        :do (setf (aref (cave-mat cave) y (+ 244 (- x (cave-offset cave))))
-                  #\#)))
+        :do (setf (lookup cave (vector (+ x 244) y)) #\#)))
 
 (defun vertical-draw (src dst cave &aux (y (y src)))
   (loop :for x
           :from (+ 244 (min (x dst) (x src)))
             :to (+ 244 (max (x dst) (x src)))
-        :do (setf (aref (cave-mat cave) y (- x (cave-offset cave)))
-                  #\#)))
+        :do (setf (lookup cave (vector x y)) #\#)))
 
 (defun draw-rock-path (src dst cave)
   (ematch (cons src dst)
@@ -78,10 +79,6 @@
 
 ;;----------------------------------------
 
-(-> lookup (cave coord) standard-char)
-(defun lookup (cave pos)
-  (aref (cave-mat cave) (y pos) (- (x pos) (cave-offset cave))))
-
 (-> down       (coord) coord)
 (-> down-left  (coord) coord)
 (-> down-right (coord) coord)
@@ -94,16 +91,16 @@
   (cond ((>= (y current-pos) (cave-floor cave))
          :void)
         ((char= #\. (lookup cave (down current-pos)))
-         (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)
-         (setf (aref (cave-mat cave) (y (down current-pos)) (- (x (down current-pos)) (cave-offset cave))) #\o)
+         (setf (lookup cave current-pos)        #\.)
+         (setf (lookup cave (down current-pos)) #\o)
          (down current-pos))
         ((char= #\. (lookup cave (down-left current-pos)))
-         (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)
-         (setf (aref (cave-mat cave) (y (down-left current-pos)) (- (x (down-left current-pos)) (cave-offset cave))) #\o)
+         (setf (lookup cave current-pos)        #\.)
+         (setf (lookup cave (down-left current-pos)) #\o)
          (down-left current-pos))
         ((char= #\. (lookup cave (down-right current-pos)))
-         (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)
-         (setf (aref (cave-mat cave) (y (down-right current-pos)) (- (x (down-right current-pos)) (cave-offset cave))) #\o)
+         (setf (lookup cave current-pos)        #\.)
+         (setf (lookup cave (down-right current-pos)) #\o)
          (down-right current-pos))
         (t :rest)))
 
@@ -123,16 +120,16 @@
 
 (defun can-fall-gold-p (cave current-pos)
   (cond ((char= #\. (lookup cave (down current-pos)))
-         (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)
-         (setf (aref (cave-mat cave) (y (down current-pos)) (- (x (down current-pos)) (cave-offset cave))) #\o)
+         (setf (lookup cave current-pos)        #\.)
+         (setf (lookup cave (down current-pos)) #\o)
          (down current-pos))
         ((char= #\. (lookup cave (down-left current-pos)))
-         (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)
-         (setf (aref (cave-mat cave) (y (down-left current-pos)) (- (x (down-left current-pos)) (cave-offset cave))) #\o)
+         (setf (lookup cave current-pos)        #\.)
+         (setf (lookup cave (down-left current-pos)) #\o)
          (down-left current-pos))
         ((char= #\. (lookup cave (down-right current-pos)))
-         (setf (aref (cave-mat cave) (y current-pos) (- (x current-pos) (cave-offset cave))) #\.)
-         (setf (aref (cave-mat cave) (y (down-right current-pos)) (- (x (down-right current-pos)) (cave-offset cave))) #\o)
+         (setf (lookup cave current-pos)        #\.)
+         (setf (lookup cave (down-right current-pos)) #\o)
          (down-right current-pos))
         (t :rest)))
 
@@ -144,15 +141,13 @@
 
 (defun fill-cave-floor (cave)
   (dotimes (i (array-dimension (cave-mat cave) 1))
-    (setf (aref (cave-mat cave)
-                (1- (array-dimension (cave-mat cave) 0)) i)
-          #\#)))
+    (setf (aref (cave-mat cave) (1- (array-dimension (cave-mat cave) 0)) i) #\#)))
 
 (defun gold (cave &optional (sand-source #(744 0)))
   (fill-cave-floor cave)
-  (loop :until (and (char= #\o (aref (cave-mat cave) (1+ (y sand-source)) (- (x sand-source) (cave-offset cave))))
-                    (char= #\o (aref (cave-mat cave) (1+ (y sand-source)) (+ 1 (- (x sand-source) (cave-offset cave)))))
-                    (char= #\o (aref (cave-mat cave) (1+ (y sand-source)) (+ -1 (- (x sand-source) (cave-offset cave))))))
+  (loop :until (and  (char= #\o (lookup cave (vector (+  0 (x sand-source)) (1+ (y sand-source)))))
+                     (char= #\o (lookup cave (vector (+  1 (x sand-source)) (1+ (y sand-source)))))
+                     (char= #\o (lookup cave (vector (+ -1 (x sand-source)) (1+ (y sand-source))))))
         :do (drop-gold-sand cave sand-source))
   (loop :for x :from 0 :below (array-dimension (cave-mat cave) 0)
         :summing (loop :for y :from 0 :below (array-dimension (cave-mat cave) 1)
