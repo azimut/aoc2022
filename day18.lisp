@@ -13,50 +13,12 @@
 
 (s:eval-always (series::install))
 
-(-> voxels (string) list)
 (defun voxels (filename)
   (with-open-file (f filename)
     (loop :for line := (read-line f nil nil)
           :while line
           :for (x y z) := (re:split "," line)
           :collect (v! (parse-integer x) (parse-integer y) (parse-integer z)))))
-
-(-> neighbour-p (rtg-math.types:vec3 rtg-math.types:vec3) boolean)
-(defun neighbour-p (a b)
-  (or (v3:= b (v3:+ a (v!  0  0 +1)))
-      (v3:= b (v3:+ a (v!  0  0 -1)))
-      (v3:= b (v3:+ a (v! +1  0  0)))
-      (v3:= b (v3:+ a (v! -1  0  0)))
-      (v3:= b (v3:+ a (v!  0 -1  0)))
-      (v3:= b (v3:+ a (v!  0 +1  0)))))
-
-;;------------------------------
-
-(s:defsubst neighbours-to-faces (n) (abs (- n 6)))
-(defun silver (filename &aux (voxels (voxels filename)))
-  (collect-sum
-   (mapping ((voxel1 (scan voxels)))
-     (neighbours-to-faces
-      (collect-length
-       (choose-if (s:op (neighbour-p voxel1 _))
-                  (scan voxels)))))))
-
-(defun silver (filename &aux (voxels (voxels filename)))
-  (collect-sum
-   (#M(s:op (abs (- _ 6)))
-      (mapping ((voxel1 (scan voxels)))
-        (collect-length
-         (choose-if (s:op (neighbour-p voxel1 _))
-                    (scan voxels)))))))
-
-(defun silver (filename &aux (voxels (voxels filename)))
-  (~>> (loop :for voxel1 :in voxels
-             :collect (loop :for voxel2 :in voxels
-                            :counting (neighbour-p voxel1 voxel2)))
-       (mapcar (s:op (abs (- _ 6))))
-       (reduce #'+)))
-
-;;------------------------------
 
 (defun neightbours (v3)
   (list (v3:+ v3 (v!  0  0 +1))
@@ -65,6 +27,11 @@
         (v3:+ v3 (v! -1  0  0))
         (v3:+ v3 (v!  0 -1  0))
         (v3:+ v3 (v!  0 +1  0))))
+
+(defun silver (filename &aux (voxels (voxels filename)))
+  (loop :for voxel :in voxels
+        :summing (loop :for neighbour :in (neightbours voxel)
+                       :counting (not (position neighbour voxels :test #'v3:=)))))
 
 (defun bounded-p (v3 min max)
   (and (<= (x min) (x v3) (x max))
@@ -75,14 +42,16 @@
   (s:enq min queue)
   (loop :until (s:queue-empty-p queue)
         :for next := (s:deq queue)
-        :summing (loop :for neighbour :in (neightbours next)
-                       :counting (prog1 (when (bounded-p neighbour min max)
-                                          (if (member neighbour voxels :test #'v3:=)
-                                              (prog1 T)
-                                              (prog1 NIL
-                                                (when (not (member neighbour visited :test #'v3:=))
-                                                  (s:enq neighbour queue)))))
-                                   (push neighbour visited)))))
+        :summing
+        (loop :for neighbour :in (neightbours next)
+              :counting
+              (prog1 (when (bounded-p neighbour min max)
+                       (if (member neighbour voxels :test #'v3:=)
+                           T
+                           (prog1 NIL
+                             (when (not (member neighbour visited :test #'v3:=))
+                               (s:enq neighbour queue)))))
+                (push neighbour visited)))))
 
 (defun gold (filename &aux (voxels (voxels filename)))
   (multiple-value-call #'floodfill voxels (s:queue)
