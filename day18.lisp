@@ -20,7 +20,7 @@
           :for (x y z) := (re:split "," line)
           :collect (v! (parse-integer x) (parse-integer y) (parse-integer z)))))
 
-(defun neightbours (v3)
+(defun neighbours (v3)
   (list (v3:+ v3 (v!  0  0 +1))
         (v3:+ v3 (v!  0  0 -1))
         (v3:+ v3 (v! +1  0  0))
@@ -28,9 +28,21 @@
         (v3:+ v3 (v!  0 -1  0))
         (v3:+ v3 (v!  0 +1  0))))
 
-(defun silver (filename &aux (voxels (voxels filename)))
+(defun choose-nil (items)
+  (declare (optimizable-series-function) (off-line-port items))
+  (choose-if #'null items))
+
+(defun silver (voxels)
+  (collect-sum
+   (mapping ((voxel (scan voxels)))
+     (collect-length
+      (choose-nil
+       (#M(s:op (position _ voxels :test #'v3:=))
+          (scan (neighbours voxel))))))))
+
+(defun silver (voxels)
   (loop :for voxel :in voxels
-        :summing (loop :for neighbour :in (neightbours voxel)
+        :summing (loop :for neighbour :in (neighbours voxel)
                        :counting (not (position neighbour voxels :test #'v3:=)))))
 
 (defun bounded-p (v3 min max)
