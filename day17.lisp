@@ -47,7 +47,7 @@
 (defun idx (mat height &aux (dim (length mat)))
   (mod (+ height dim) dim))
 
-(defun push-it (chamber height jet)
+(defun push-it (chamber shape height jet)
   (a:when-let* ((idx        (idx chamber height))
                 (unshifted  (slice chamber idx T))
                 (shifted    (bit-truncate (funcall jet unshifted)))
@@ -59,10 +59,12 @@
   (/= (count 1 (bit-and (last shape) (slice chamber (idx chamber height) t)))
       (count 1 (last shape))))
 
-(defun fall-it (shape chamber height)
-  (unless (collide-on-fall-p height shape chamber)
-    (setf (slice chamber ))
-    (setf (slice chamber) )))
+(defun fall-it (chamber height shape)
+  #+nil
+  (dotimes (dy (length shape))
+    (unless (collide-on-fall-p height shape chamber)
+      (setf (slice chamber ))
+      (setf (slice chamber) ))))
 
 (defun silver (jets n-rocks &aux (height 0) (chamber (make-chamber n-rocks)))
   (iterate ((round (scan-range :upto n-rocks))
@@ -74,9 +76,13 @@
     (format t "Rock ~d of ~d~%" round n-rocks)
     (loop :until (collide-on-fall-p height shape chamber)
           :do (incf height)
-              (push-it shape chamber height (pop jets))
-              (fall-it shape chamber height)))
-  height)
+              (push-it chamber height (pop jets))
+              (fall-it chamber height shape)))
+  
+  (dotimes (x (1- (array-dimension chamber 0)))
+    (dotimes (y (1- (array-dimension chamber 1)))
+      (when (plusp (aref chamber x y))
+        (return-from silver (list :found x :height height))))))
 
 ;;------------------------------
 ;; (auto-revert-mode)

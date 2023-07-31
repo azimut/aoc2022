@@ -1,7 +1,7 @@
 open Batteries
 
 let input =
-  File.with_file_in "day1.txt" IO.read_all
+  File.with_file_in "data/day1.txt" IO.read_all
   |> String.split_on_string ~by:"\n\n"
   |> List.map (String.split_on_char '\n' % String.trim)
   |> List.map (List.map int_of_string)

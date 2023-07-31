@@ -31,7 +31,7 @@
   ((guard (list (cons left left-tail) (cons right right-tail))
           (and (numberp left) (numberp right)))
    (if (and (numberp (compare (list left right)))
-            (zerop (compare (list left right))))
+            (zerop   (compare (list left right))))
        (compare (list left-tail right-tail))
        (compare (list left right))))
   ((guard (list (cons left left-tail) (cons right right-tail))
@@ -57,3 +57,13 @@
         :for i :from 1
         :when (= -1 (compare packet-pair))
           :summing i))
+
+(defun flat-1 (lsts) (loop :for lst :in lsts :append lst))
+(defun gold (filename &aux (idx1 '((2))) (idx2 '((6))))
+  (let ((pkts (~>> (packets filename)
+                   (flat-1)
+                   (cons idx1)
+                   (cons idx2)
+                   (sort _ (lambda (x y) (= (compare (list x y)) -1))))))
+    (* (1+ (position idx1 pkts :test #'equal))
+       (1+ (position idx2 pkts :test #'equal)))))

@@ -1,30 +1,26 @@
-(ql:quickload
- '(#:defpackage-plus
-   #:alexandria
-   #:serapeum
-   #:trivia
-   #:cl-slice
-   #:cl-ppcre
-   #:rtg-math))
+;; (ql:quickload '(#:defpackage-plus #:alexandria #:serapeum #:cl-ppcre))
 
 (defpackage+-1:defpackage+ #:aoc2022-day16
-  (:use #:cl #:trivia #:rtg-math)
+  (:use #:cl)
   (:import-from #:serapeum #:-> #:~>> #:~>)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:s #:serapeum)
-                    (#:re #:cl-ppcre)))
+  (:local-nicknames (#:a #:alexandria) (#:s #:serapeum) (#:re #:cl-ppcre)))
 
 (in-package #:aoc2022-day16)
 
+(defstruct node
+  (name :? :type keyword)
+  (id -1 :type fixnum)
+  (rate -1 :type fixnum)
+  (cost 1 :type fixnum)
+  (neighbours () :type list))
+
 ;; OUTPUT max possible total pressure released in 30 minutes
-;; PART 1 = 1651
+;; PART 1 = 1651 = ??
 
 (defun lines (s)   (re:split "\\n" s))
 (defun slurp (f)   (a:read-file-into-string f))
 
-(defstruct node id rate neighbours)
-
-(defun parse (filename &aux raw-nodes nodes (nodes-map (make-hash-table)))
+(defun parse (filename &aux raw-nodes nodes (nodes-map (make-hash-table)) (id 0))
   (flet ((f (s) (~>> s (re:split ", ") (mapcar #'a:make-keyword))))
     (re:do-register-groups
         ((#'a:make-keyword valve)
@@ -34,36 +30,42 @@
          (slurp filename))
       (push `(,valve ,rate ,to-valves) raw-nodes)
       (push (setf (s:href nodes-map valve) 
-                  (make-node :id valve :rate rate :neighbours to-valves))
+                  (make-node :name valve :id (1- (incf id))
+                             :rate rate :neighbours to-valves))
             nodes)))
   (assert (a:length= raw-nodes (length (lines (slurp filename)))))
-  (list :first-node (caar (reverse raw-nodes))
+  (list :start (caar (reverse raw-nodes))
         :nodes-map nodes-map
+        :results (make-array (* 30 (reduce #'+ (mapcar #'node-rate nodes))) :element-type 'bit)        
         :nodes (reverse nodes)))
 
-(defun find-max-neighbour-greedy (node node-map)
-  (~>> (node-neighbours node)
-       (mapcar (lambda (id) (s:href node-map id)))
-       (sort _ #'> :key #'node-rate)
-       (first)))
+(-> dfs (keyword hash-table (simple-bit-vector *) fixnum fixnum fixnum list) 
+    (values))
+(defun dfs (at nodes-hash results minutes sum-pressure current-pressure opened-valves)
+  (declare (optimize (speed 3)))
+  (declare (fixnum current-pressure sum-pressure))
+  (when (minusp minutes) (setf (bit results sum-pressure) 1))
+  (when (plusp minutes)
+    (incf sum-pressure current-pressure)
+    (dolist (next (node-neighbours (gethash at nodes-hash)))
+      (when (and (plusp (node-rate (gethash at nodes-hash)))
+                 (not (member at opened-valves)))
+        (dfs next nodes-hash results 
+             (+ -2 minutes)
+             (+ sum-pressure current-pressure)
+             (+ current-pressure (node-rate (gethash at nodes-hash))) 
+             (cons at opened-valves)))
+      (dfs next nodes-hash results
+           (+ -1 minutes)
+           sum-pressure
+           current-pressure
+           opened-valves))))
 
-(defun silver-greedy (filename &aux current-node)
-  (destructuring-bind (&key first-node nodes-map nodes) (parse filename)
-    (setf current-node (s:href nodes-map first-node))
-    (loop :for i :from 0 :to 30
-          :with pressure := 0
-          :with acc := 0
-          :with turned-p
-          :if (and (plusp (node-rate current-node)) (not turned-p))
-            :do (incf i)
-                (setf turned-p T)
-          :else
-            :do 
-               (when turned-p
-                 (incf pressure (node-rate current-node)))
-               (setf current-node (find-max-neighbour-greedy current-node nodes-map))
-               (setf turned-p NIL)
-          :do
-             (incf acc pressure)
-          :finally 
-             (return acc))))
+(-> silver (string) fixnum)
+(defun silver (filename)
+  (destructuring-bind (&key start nodes-map results &allow-other-keys) (parse filename)
+    (declare (type hash-table nodes-map)
+             (type (simple-bit-vector *) results)
+             (type keyword start))
+    (dfs start nodes-map results 30 0 0 '())
+    (position 1 results :from-end t)))

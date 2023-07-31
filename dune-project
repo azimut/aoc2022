@@ -14,4 +14,4 @@
 (package
  (name challenges)
  (synopsis "coding challenges")
- (depends batteries))
+ (depends batteries angstrom))

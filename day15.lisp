@@ -52,7 +52,7 @@
     (assert (<= y-min y-row y-max))
     (loop :for x :from (- x-min magic-offset) :to (+ x-max magic-offset)
           :for test-coord := (v2!int x y-row)
-          :counting 
+          :counting
           (loop :for sensor :in sensors
                 :thereis (and (not (v2= test-coord thing-in-row))
                               (<= (manhattan-distance (sensor-pos sensor) test-coord)

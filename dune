@@ -1,4 +1,4 @@
-(executable (name day1)  (modules day1)  (libraries batteries))
+(executable (name day1)  (modules day1)  (libraries batteries) (modes byte exe))
 (executable (name day2)  (modules day2)  (libraries batteries))
 (executable (name day3)  (modules day3)  (libraries batteries))
 (executable (name day4)  (modules day4)  (libraries batteries))
@@ -7,6 +7,10 @@
 (executable (name day7)  (modules day7)  (libraries batteries))
 (executable (name day8)  (modules day8)  (libraries batteries))
 (executable (name day10) (modules day10) (libraries batteries))
+(executable (name day13) (modules day13) (libraries batteries angstrom))
+
+(executable (name day21)  (modules day21)  (libraries batteries))
+
 
 (env
  (dev
